@@ -6,7 +6,7 @@
 /*   By: astepovy <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/02/03 16:17:29 by astepovy          #+#    #+#             */
-/*   Updated: 2017/02/03 16:30:10 by astepovy         ###   ########.fr       */
+/*   Updated: 2017/02/05 11:57:20 by astepovy         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,17 +45,26 @@ int		findchr(char *s, char c)
 
 char	*ft_strndup(const char *s, size_t n)
 {
-	char	*result;
+	char	*res;
 	size_t	len;
 
 	len = ft_strlen(s);
 	if (n < len)
 		len = n;
-	result = (char*)malloc(len + 1);
-	if (!result)
+	res = (char*)malloc(len + 1);
+	if (!res)
 		return (0);
-	result[len] = '\0';
-	return (char*)ft_memcpy(result, s, len);
+	res[len] = '\0';
+	return (char*)ft_memcpy(res, s, len);
+}
+
+char	*ft_remalloc(char *buf, int pos)
+{
+	char *tmp;
+
+	tmp = ft_strdup(&buf[pos]);
+	free(buf);
+	return (tmp);
 }
 
 int		get_next_line(const int fd, char **line)
@@ -66,8 +75,7 @@ int		get_next_line(const int fd, char **line)
 	int			res;
 
 	pos = -1;
-	if (BUFF_SIZE > 0)
-		tmp = malloc(sizeof(char) * (BUFF_SIZE + 1));
+	tmp = (BUFF_SIZE > 0) ? malloc(sizeof(char) * (BUFF_SIZE + 1)) : '\0';
 	while ((res = read(fd, tmp, BUFF_SIZE)) > 0 && fd >= 0 && fd <= OPEN_MAX)
 	{
 		tmp[res] = '\0';
@@ -79,12 +87,10 @@ int		get_next_line(const int fd, char **line)
 		return (-1);
 	if (buf[fd] == NULL || buf[fd][0] == '\0')
 		return (0);
-	if (((tmp = ft_strdup(buf[fd])) && (pos = findchr(buf[fd], '\n')) != -1))
+	if ((pos = findchr(buf[fd], '\n')) != -1)
 	{
-		*line = ft_strndup(tmp, pos);
-		free(buf[fd]);
-		buf[fd] = (pos == -2) ? '\0' : ft_strdup(&tmp[pos + 1]);
-		free(tmp);
+		*line = ft_strndup(buf[fd], pos);
+		buf[fd] = (pos == -2) ? '\0' : ft_remalloc(buf[fd], pos + 1);
 		return (1);
 	}
 	return ((*line = ft_strndup(buf[fd], pos)) && ft_strlen(*line) != 0);
